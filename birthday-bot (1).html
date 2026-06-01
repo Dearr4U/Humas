@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta nama="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta nama="theme-color" content="#0a0a0a">
+<meta nama="apple-mobile-web-app-capable" content="yes">
+<meta nama="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BirthdayBot — Manajemen Ulang Tahun</title>
+<link rel="manifest" href="data:application/json,{}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #090909;
+  --bg2: #111111;
+  --bg3: #181818;
+  --bg4: #1f1f1f;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.07);
+  --glass3: rgba(255,255,255,0.11);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --green: #1db954;
+  --green2: #17a349;
+  --green3: rgba(29,185,84,0.15);
+  --green4: rgba(29,185,84,0.08);
+  --text: #ffffff;
+  --text2: rgba(255,255,255,0.65);
+  --text3: rgba(255,255,255,0.38);
+  --red: #ff4444;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --pink: #ec4899;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --nav-h: 72px;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 99px; }
+
+/* MAIN CONTENT */
+#app { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: var(--nav-h); scroll-behavior: smooth; }
+
+/* PAGES */
+.page { display: none; padding: 0 0 1rem; min-height: calc(100vh - var(--nav-h)); }
+.page.active { display: block; }
+
+/* BOTTOM NAV */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
+  background: rgba(9,9,9,0.92); backdrop-filter: blur(24px);
+  border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer; padding: 8px 4px; transition: all 0.2s;
+  color: var(--text3); font-size: 10px; font-family: var(--font-display); font-weight: 500;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.nav-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; transition: all 0.2s; }
+.nav-item.active { color: var(--green); }
+.nav-item.active svg { stroke: var(--green); filter: drop-shadow(0 0 8px rgba(29,185,84,0.4)); }
+.nav-item:not(.active):active { transform: scale(0.9); }
+
+/* HEADER GRADIENT */
+.page-header {
+  padding: 20px 20px 0;
+  position: sticky; top: 0; z-index: 50;
+  background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+}
+
+/* TYPOGRAPHY */
+.display-title { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.section-title { font-family: var(--font-display); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 12px; }
+
+/* GLASS CARD */
+.card {
+  background: var(--glass); border: 0.5px solid var(--border); border-radius: var(--radius);
+  backdrop-filter: blur(12px); overflow: hidden;
+}
+.card-press { transition: transform 0.15s, background 0.15s; cursor: pointer; }
+.card-press:active { transform: scale(0.97); background: var(--glass2); }
+
+/* STAT CARDS */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 20px 0; }
+.stat-card {
+  background: var(--glass); border: 0.5px solid var(--border); border-radius: var(--radius);
+  padding: 16px 14px; position: relative; overflow: hidden;
+  transition: transform 0.15s;
+}
+.stat-card:active { transform: scale(0.96); }
+.stat-card .glow { position: absolute; top: -20px; right: -20px; width: 70px; height: 70px; border-radius: 50%; opacity: 0.15; filter: blur(20px); }
+.stat-card .s-label { font-size: 11px; color: var(--text3); font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.stat-card .s-num { font-family: var(--font-display); font-size: 36px; font-weight: 800; line-height: 1; }
+.stat-card .s-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.stat-card.green .glow { background: var(--green); }
+.stat-card.green .s-num { color: var(--green); }
+.stat-card.amber .glow { background: var(--amber); }
+.stat-card.amber .s-num { color: var(--amber); }
+.stat-card.blue .glow { background: var(--blue); }
+.stat-card.blue .s-num { color: var(--blue); }
+.stat-card.pink .glow { background: var(--pink); }
+.stat-card.pink .s-num { color: var(--pink); }
+
+/* MEMBER CARD */
+.member-card {
+  background: var(--glass); border: 0.5px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; margin: 0 20px 10px; transition: all 0.15s; cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+}
+.member-card:active { transform: scale(0.98); background: var(--glass2); }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 15px;
+  flex-shrink: 0; border: 1.5px solid var(--border2);
+}
+.member-info { flex: 1; min-width: 0; }
+.member-nama { font-family: var(--font-display); font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.member-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.member-badge {
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  padding: 3px 8px; border-radius: 99px; white-space: nowrap; flex-shrink: 0;
+}
+.badge-today { background: rgba(29,185,84,0.18); color: var(--green); border: 0.5px solid rgba(29,185,84,0.3); }
+.badge-soon { background: rgba(245,158,11,0.15); color: var(--amber); border: 0.5px solid rgba(245,158,11,0.3); }
+.badge-normal { background: var(--glass2); color: var(--text2); border: 0.5px solid var(--border); }
+
+/* SEARCH */
+.search-wrap { padding: 12px 20px 0; position: relative; }
+.search-input {
+  width: 100%; background: var(--glass2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 16px 11px 40px; color: var(--text);
+  font-family: var(--font-body); font-size: 14px; outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.search-input:focus { border-color: var(--border2); background: var(--glass3); }
+.search-input::placeholder { color: var(--text3); }
+.search-icon { position: absolute; left: 32px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text3); pointer-events: none; }
+
+/* FILTER CHIPS */
+.filter-row { display: flex; gap: 8px; padding: 10px 20px 0; overflow-x: auto; scrollbar-width: none; }
+.filter-row::-webkit-scrollbar { display: none; }
+.chip {
+  padding: 6px 14px; border-radius: 99px; font-size: 12px; font-family: var(--font-display);
+  font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.15s;
+  background: var(--glass); border: 0.5px solid var(--border); color: var(--text2);
+}
+.chip.active { background: var(--green3); border-color: rgba(29,185,84,0.4); color: var(--green); }
+.chip:active { transform: scale(0.95); }
+
+/* BUTTON */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 12px 20px; border-radius: var(--radius-sm); font-family: var(--font-display);
+  font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.15s;
+  border: none; outline: none;
+}
+.btn-primary { background: var(--green); color: #000; }
+.btn-primary:active { background: var(--green2); transform: scale(0.97); }
+.btn-secondary { background: var(--glass2); color: var(--text); border: 0.5px solid var(--border2); }
+.btn-secondary:active { background: var(--glass3); transform: scale(0.97); }
+.btn-danger { background: rgba(255,68,68,0.15); color: var(--red); border: 0.5px solid rgba(255,68,68,0.3); }
+.btn-danger:active { background: rgba(255,68,68,0.25); transform: scale(0.97); }
+.btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; }
+.btn-icon { padding: 9px; border-radius: 8px; }
+.btn-full { width: 100%; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 7px; display: block; }
+.form-control {
+  width: 100%; background: var(--glass2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text);
+  font-family: var(--font-body); font-size: 14px; outline: none;
+  transition: border-color 0.2s; appearance: none;
+}
+.form-control:focus { border-color: var(--green); box-shadow: 0 0 0 2px rgba(29,185,84,0.1); }
+.form-control::placeholder { color: var(--text3); }
+select.form-control { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* MODAL */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s;
+  pointer-events: none;
+}
+#modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 24px 24px 0 0;
+  width: 100%; max-height: 90vh; overflow-y: auto; padding: 8px 0 32px;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+#modal-overlay.open .modal { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 99px; margin: 8px auto 16px; }
+.modal-body { padding: 0 20px; }
+.modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+
+/* TOAST */
+#toast {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 99px;
+  padding: 10px 20px; font-size: 13px; font-family: var(--font-display); font-weight: 600;
+  white-space: nowrap; z-index: 300; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; align-items: center; gap: 8px;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.success { color: var(--green); border-color: rgba(29,185,84,0.3); }
+#toast.error { color: var(--red); border-color: rgba(255,68,68,0.3); }
+
+/* CALENDAR */
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-nama { text-align: center; font-size: 11px; font-family: var(--font-display); font-weight: 600; color: var(--text3); padding: 4px 0 8px; text-transform: uppercase; }
+.cal-cell {
+  aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; cursor: pointer;
+  font-size: 13px; font-family: var(--font-display); font-weight: 500;
+  transition: background 0.15s; position: relative; gap: 2px;
+}
+.cal-cell:not(.empty):hover { background: var(--glass2); }
+.cal-cell:not(.empty):active { background: var(--glass3); transform: scale(0.93); }
+.cal-cell.today { background: var(--green3); color: var(--green); border: 0.5px solid rgba(29,185,84,0.4); }
+.cal-cell.has-bd { color: var(--text); }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); }
+.cal-badge-num { font-size: 9px; font-family: var(--font-display); font-weight: 700; color: var(--amber); }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 60px 40px; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.empty-sub { color: var(--text3); font-size: 14px; line-height: 1.6; }
+
+/* NOTIF BANNER */
+.notif-banner {
+  margin: 16px 20px 0; background: var(--green4); border: 0.5px solid rgba(29,185,84,0.25);
+  border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: flex-start; gap: 10px;
+}
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-top: 3px; flex-shrink: 0; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(29,185,84,0.4); } 50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(29,185,84,0); } }
+
+/* TODAY BIRTHDAY CARD */
+.today-card {
+  margin: 0 20px 12px; background: linear-gradient(135deg, rgba(29,185,84,0.12), rgba(29,185,84,0.04));
+  border: 0.5px solid rgba(29,185,84,0.3); border-radius: var(--radius);
+  padding: 16px; display: flex; align-items: center; gap: 12px;
+}
+.today-card .age-badge {
+  background: var(--green); color: #000; font-family: var(--font-display); font-weight: 800;
+  font-size: 22px; width: 52px; height: 52px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* COUNTDOWN RING */
+.countdown-wrap { display: flex; align-items: center; gap: 6px; }
+.countdown-bar { flex: 1; height: 3px; background: var(--glass3); border-radius: 99px; overflow: hidden; }
+.countdown-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.5s; }
+
+/* SETTINGS */
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 0.5px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+
+/* TOGGLE */
+.toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--glass3); border-radius: 99px;
+  cursor: pointer; transition: background 0.2s;
+}
+.toggle-slider:before {
+  content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+  background: var(--text2); border-radius: 50%; transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--green); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(18px); background: #000; }
+
+/* PAGE TITLE BAR */
+.title-bar { padding: 24px 20px 16px; }
+.title-bar h1 { font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.title-bar p { color: var(--text3); font-size: 13px; margin-top: 4px; }
+
+/* SECTION WRAP */
+.section { padding: 16px 20px 0; }
+
+/* IMPORT RESULT */
+.import-result { background: var(--glass); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 14px; }
+.import-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 0.5px solid var(--border); }
+.import-row:last-child { border-bottom: none; }
+
+/* PAGINATION */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 20px; }
+.page-btn {
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; background: var(--glass); border: 0.5px solid var(--border);
+  font-family: var(--font-display); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.page-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+.page-btn:not(.active):active { background: var(--glass2); }
+
+/* REALTIME CLOCK */
+#clock { font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+#date-display { font-size: 13px; color: var(--text3); margin-top: 2px; }
+
+/* FADE IN ANIMATION */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp 0.35s ease both; }
+.fade-up-1 { animation-delay: 0.05s; }
+.fade-up-2 { animation-delay: 0.1s; }
+.fade-up-3 { animation-delay: 0.15s; }
+.fade-up-4 { animation-delay: 0.2s; }
+.fade-up-5 { animation-delay: 0.25s; }
+
+/* CONFETTI */
+.confetti-wrap { pointer-events: none; position: fixed; inset: 0; z-index: 400; overflow: hidden; }
+.confetti-piece {
+  position: absolute; width: 8px; height: 8px; border-radius: 2px;
+  animation: confettiFall 2.5s ease-in forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* DETAIL OVERLAY */
+#detail-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+  display: flex; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s;
+  pointer-events: none;
+}
+#detail-overlay.open { opacity: 1; pointer-events: all; }
+.detail-sheet {
+  background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 24px 24px 0 0;
+  width: 100%; max-height: 85vh; overflow-y: auto; padding: 8px 0 32px;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+#detail-overlay.open .detail-sheet { transform: translateY(0); }
+
+/* PROGRESS BAR */
+.prog-wrap { background: var(--glass2); border-radius: 99px; height: 4px; overflow: hidden; margin-top: 6px; }
+.prog-bar { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--green), #00e676); transition: width 0.6s ease; }
+
+/* WEEK CARD */
+.week-card {
+  margin: 0 20px 10px; background: var(--glass); border: 0.5px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+}
+.date-block {
+  background: var(--glass2); border: 0.5px solid var(--border); border-radius: 12px;
+  padding: 8px 10px; text-align: center; min-width: 44px; flex-shrink: 0;
+}
+.date-block .d-num { font-family: var(--font-display); font-size: 20px; font-weight: 800; line-height: 1; }
+.date-block .d-mon { font-size: 10px; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; color: var(--text3); margin-top: 2px; }
+
+/* AUTH LOCK */
+.lock-icon-wrap { width: 64px; height: 64px; border-radius: 50%; background: var(--glass2); border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.pin-dots { display: flex; gap: 12px; justify-content: center; margin: 20px 0; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border2); background: transparent; transition: all 0.15s; }
+.pin-dot.filled { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px rgba(29,185,84,0.4); }
+.pin-dot.error { background: var(--red); border-color: var(--red); box-shadow: 0 0 8px rgba(255,68,68,0.4); animation: shake 0.3s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 0 auto; }
+.numpad-btn {
+  height: 64px; border-radius: var(--radius); background: var(--glass2); border: 0.5px solid var(--border);
+  font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text);
+  cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center;
+}
+.numpad-btn:active { background: var(--glass3); transform: scale(0.93); }
+.numpad-btn.del { font-size: 16px; color: var(--text3); }
+.numpad-btn.empty { background: transparent; border-color: transparent; pointer-events: none; }
+.admin-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green3); border: 0.5px solid rgba(29,185,84,0.3); border-radius: 99px; padding: 3px 10px; font-size: 11px; font-family: var(--font-display); font-weight: 600; color: var(--green); }
+
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- PAGE: DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;">
+        <div>
+          <div style="font-size:11px;font-family:var(--font-display);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:4px;">🎂 BirthdayBot</div>
+          <div id="clock">00:00:00</div>
+          <div id="date-display">Memuat tanggal...</div>
+        </div>
+        <div style="position:relative;">
+          <div id="notif-bell" style="width:42px;height:42px;background:var(--glass);border:0.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showNotifPanel()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div id="notif-dot" style="position:absolute;top:2px;right:2px;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid var(--bg);display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notif-banner-area"></div>
+
+    <div class="stats-grid fade-up fade-up-1">
+      <div class="stat-card" onclick="goPage('page-members')">
+        <div class="glow" style="background:var(--text2)"></div>
+        <div class="s-label">Total Member</div>
+        <div class="s-num" id="stat-total">0</div>
+        <div class="s-sub">Anggota terdaftar</div>
+      </div>
+      <div class="stat-card green card-press" onclick="goPage('page-today')">
+        <div class="glow"></div>
+        <div class="s-label">Hari Ini</div>
+        <div class="s-num" id="stat-today">0</div>
+        <div class="s-sub">Ulang tahun</div>
+      </div>
+      <div class="stat-card amber card-press" onclick="goPage('page-week')">
+        <div class="glow"></div>
+        <div class="s-label">Minggu Ini</div>
+        <div class="s-num" id="stat-week">0</div>
+        <div class="s-sub">Ulang tahun</div>
+      </div>
+      <div class="stat-card blue card-press" onclick="goPage('page-month')">
+        <div class="glow"></div>
+        <div class="s-label">Bulan Ini</div>
+        <div class="s-num" id="stat-month">0</div>
+        <div class="s-sub">Ulang tahun</div>
+      </div>
+    </div>
+
+    <div class="section fade-up fade-up-2" style="margin-top:20px;">
+      <div class="section-title">Upcoming — Ulang Tahun Terdekat</div>
+      <div id="upcoming-list"></div>
+    </div>
+
+    <div class="section fade-up fade-up-3" style="margin-top:8px;">
+      <div style="display:flex;gap:10px;">
+        <button id="btn-add-member" class="btn btn-primary" style="flex:1;font-size:13px;" onclick="requireAdmin(openAddModal)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Tambah Member
+        </button>
+        <button id="btn-import-csv" class="btn btn-secondary" style="flex:1;font-size:13px;" onclick="requireAdmin(()=>document.getElementById('csv-file-input').click())">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import CSV
+        </button>
+      </div>
+      <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
+    </div>
+  </div>
+
+  <!-- PAGE: TODAY -->
+  <div class="page" id="page-today">
+    <div class="title-bar">
+      <h1>🎉 Hari Ini</h1>
+      <p id="today-sub">Ulang tahun tanggal hari ini</p>
+    </div>
+    <div id="today-list"></div>
+  </div>
+
+  <!-- PAGE: CALENDAR -->
+  <div class="page" id="page-calendar">
+    <div class="title-bar" style="padding-bottom:0;">
+      <h1>📅 Kalender</h1>
+    </div>
+    <div class="section" style="padding-top:16px;">
+      <div class="cal-header">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="changeMonth(-1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div id="cal-month-label" style="font-family:var(--font-display);font-size:16px;font-weight:700;"></div>
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="changeMonth(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div id="cal-detail" style="padding:0 20px;margin-top:16px;"></div>
+    <div class="section" style="margin-top:16px;">
+      <div class="section-title">Cari Ulang Tahun</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="date" id="search-date-input" class="form-control" style="flex:1;" onchange="searchByDate()">
+      </div>
+      <div id="search-date-result" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: MEMBERS -->
+  <div class="page" id="page-members">
+    <div class="title-bar" style="padding-bottom:0;">
+      <h1>👥 Member</h1>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="member-search" placeholder="Cari nama, divisi..." oninput="renderMembers()">
+    </div>
+    <div class="filter-row" id="division-filters"></div>
+    <div style="display:flex;gap:8px;padding:10px 20px 0;">
+      <select class="form-control" id="sort-select" onchange="renderMembers()" style="flex:1;padding:8px 12px;font-size:13px;">
+        <option value="nama">Urutkan: Nama</option>
+        <option value="tanggal_lahir">Urutkan: Tgl Lahir</option>
+        <option value="countdown">Urutkan: Terdekat</option>
+      </select>
+    </div>
+    <div id="member-list" style="margin-top:12px;"></div>
+    <div id="members-pagination"></div>
+  </div>
+
+  <!-- PAGE: SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="title-bar">
+      <h1>⚙️ Pengaturan</h1>
+      <div id="admin-status-bar" style="margin-top:4px;"></div>
+    </div>
+    <div class="section">
+      <div class="card" style="padding:16px;">
+        <div class="section-title" style="margin-bottom:16px;">Organisasi</div>
+        <div class="form-group">
+          <label class="form-label">Nama Organisasi</label>
+          <input type="text" class="form-control" id="org-nama" placeholder="Masukkan nama organisasi">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveSettings()">Simpan</button>
+      </div>
+    </div>
+    <div class="section" style="margin-top:16px;">
+      <div class="card" style="padding:16px;">
+        <div class="section-title" style="margin-bottom:16px;">🔐 Admin</div>
+        <div id="admin-panel-content"></div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:16px;">
+      <div class="card" style="padding:16px;">
+        <div class="section-title" style="margin-bottom:16px;">Data</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button class="btn btn-secondary btn-full" onclick="exportCSV()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+          <button class="btn btn-secondary btn-full" onclick="backupData()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Backup Data
+          </button>
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Restore Backup
+            <input type="file" accept=".json" style="display:none" onchange="restoreData(event)">
+          </label>
+          <button class="btn btn-danger btn-full" onclick="confirmClearAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Hapus Semua Data
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:16px;padding-bottom:20px;">
+      <div class="card" style="padding:16px;">
+        <div class="section-title" style="margin-bottom:8px;">Info Aplikasi</div>
+        <div style="font-size:13px;color:var(--text3);line-height:1.8;">
+          BirthdayBot v1.0<br>
+          Timezone: Asia/Jakarta (WIB)<br>
+          Storage: localStorage<br>
+          Made with ❤️ for Deardo
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: WEEK -->
+  <div class="page" id="page-week">
+    <div class="title-bar">
+      <h1>📆 Minggu Ini</h1>
+      <p id="week-sub">Ulang tahun 7 hari ke depan</p>
+    </div>
+    <div id="week-list"></div>
+  </div>
+
+  <!-- PAGE: MONTH -->
+  <div class="page" id="page-month">
+    <div class="title-bar">
+      <h1>🗓️ Bulan Ini</h1>
+      <p id="month-sub">Ulang tahun bulan ini</p>
+    </div>
+    <div id="month-list"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <div class="nav-item active" onclick="goPage('page-dashboard')" data-page="page-dashboard">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </div>
+  <div class="nav-item" onclick="goPage('page-today')" data-page="page-today">
+    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    <span>Hari Ini</span>
+  </div>
+  <div class="nav-item" onclick="goPage('page-calendar')" data-page="page-calendar">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Kalender</span>
+  </div>
+  <div class="nav-item" onclick="goPage('page-members')" data-page="page-members">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Member</span>
+  </div>
+  <div class="nav-item" onclick="goPage('page-settings')" data-page="page-settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Pengaturan</span>
+  </div>
+</nav>
+
+<!-- MODAL ADD/EDIT -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="main-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detail-sheet">
+    <div class="modal-handle"></div>
+    <div id="detail-body" style="padding:0 20px;"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- CONFETTI CONTAINER -->
+<div class="confetti-wrap" id="confetti-wrap"></div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+const SUPA_URL = 'https://oehdgscotadtckoctzey.supabase.co';
+const SUPA_KEY = 'sb_publishable_rcKPKrx1v9mwd-abvinL0w_D2n_5_SL';
+
+async function supaFetch(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Prefer': method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=representation' : ''),
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ===== DATA STORE =====
+let DB = { members: [], settings: { orgnama: 'Organisasi Saya' } };
+
+async function loadDB() {
+  try {
+    // Load members dari Supabase
+    const rows = await supaFetch('GET', 'members?select=*&order=nama.asc', null);
+    DB.members = (rows || []).map(r => ({
+      id: r.id,
+      nama: r.nama,
+      tanggal_lahir: r.tanggal_lahir,
+      addedAt: r.added_at,
+    }));
+  } catch(e) {
+    showToast('Gagal load data dari server: ' + e.message, 'error');
+    // Fallback ke localStorage kalau offline
+    try {
+      const raw = localStorage.getItem('birthdaybot_v1');
+      if (raw) { const d = JSON.parse(raw); DB.members = d.members || []; }
+    } catch(_) {}
+  }
+  // Cache lokal buat offline
+  localStorage.setItem('birthdaybot_v1', JSON.stringify(DB));
+}
+
+async function sbInsert(member) {
+  const row = { nama: member.nama, tanggal_lahir: member.tanggal_lahir, added_at: member.addedAt };
+  const result = await supaFetch('POST', 'members', row);
+  return result && result[0] ? result[0].id : null;
+}
+
+async function sbUpdate(id, member) {
+  await supaFetch('PATCH', `members?id=eq.${id}`, { nama: member.nama, tanggal_lahir: member.tanggal_lahir });
+}
+
+async function sbDelete(id) {
+  await supaFetch('DELETE', `members?id=eq.${id}`, null);
+}
+
+async function sbDeleteAll() {
+  await supaFetch('DELETE', 'members?id=neq.00000000-0000-0000-0000-000000000000', null);
+}
+
+function cacheDB() {
+  localStorage.setItem('birthdaybot_v1', JSON.stringify(DB));
+}
+
+// ===== AUTH SYSTEM (PIN HARDCODED) =====
+// PIN default: 261080
+const ADMIN_PIN = '261080';
+let isAdmin = false;
+let pinBuffer = '';
+let pinTarget = null;
+let loginAttempts = 0;
+const MAX_ATTEMPTS = 5;
+
+function setAdminSession(val) {
+  isAdmin = val;
+  if (val) sessionStorage.setItem('bb_admin', '1');
+  else sessionStorage.removeItem('bb_admin');
+}
+
+function checkSession() {
+  if (sessionStorage.getItem('bb_admin') === '1') isAdmin = true;
+}
+
+// ===== PIN MODAL =====
+function openPinModal(callback) {
+  pinTarget = callback || null;
+  pinBuffer = '';
+  _renderPinModal();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function _renderPinModal() {
+  document.getElementById('modal-body').innerHTML = `
+    <div style="text-align:center;padding-bottom:8px;">
+      <div class="lock-icon-wrap">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:6px;">🔐 Masukkan PIN Admin</div>
+      <div style="font-size:13px;color:var(--text3);">Masukkan PIN 6 digit untuk akses admin</div>
+    </div>
+    <div class="pin-dots" id="pin-dots">
+      ${Array(6).fill('<div class="pin-dot"></div>').join('')}
+    </div>
+    <div class="numpad">
+      ${[1,2,3,4,5,6,7,8,9,'','0','del'].map(k => {
+        if (k === '') return `<div class="numpad-btn empty"></div>`;
+        if (k === 'del') return `<div class="numpad-btn del" onclick="pinKey('del')">⌫</div>`;
+        return `<div class="numpad-btn" onclick="pinKey('${k}')">${k}</div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-secondary btn-full" onclick="closeModal()">Batal</button>
+    </div>
+  `;
+}
+
+function _updatePinDots(error = false) {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((dot, i) => {
+    dot.classnama = 'pin-dot';
+    if (i < pinBuffer.length) dot.classList.add(error ? 'error' : 'filled');
+  });
+}
+
+function pinKey(k) {
+  if (k === 'del') { pinBuffer = pinBuffer.slice(0, -1); _updatePinDots(); return; }
+  if (pinBuffer.length >= 6) return;
+  pinBuffer += k;
+  _updatePinDots();
+  if (pinBuffer.length === 6) setTimeout(_processPIN, 200);
+}
+
+function _processPIN() {
+  if (pinBuffer === ADMIN_PIN) {
+    setAdminSession(true);
+    loginAttempts = 0;
+    closeModal();
+    showToast('Login admin berhasil! 🔓');
+    if (pinTarget) { const fn = pinTarget; pinTarget = null; fn(); }
+    refreshAdminUI();
+  } else {
+    loginAttempts++;
+    pinBuffer = '';
+    _updatePinDots(true);
+    if (loginAttempts >= MAX_ATTEMPTS) {
+      closeModal();
+      showToast('Terlalu banyak percobaan salah!', 'error');
+      loginAttempts = 0;
+    } else {
+      showToast(`PIN salah! Sisa ${MAX_ATTEMPTS - loginAttempts} percobaan`, 'error');
+      setTimeout(() => { pinBuffer = ''; _updatePinDots(); }, 600);
+    }
+  }
+}
+
+// ===== GATE =====
+function requireAdmin(callback) {
+  if (isAdmin) { callback(); return; }
+  openPinModal(callback);
+}
+
+// ===== ADMIN UI =====
+function refreshAdminUI() {
+  const bar = document.getElementById('admin-status-bar');
+  if (bar) {
+    bar.innerHTML = isAdmin
+      ? `<span class="admin-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Mode Admin Aktif</span>`
+      : '';
+  }
+
+  const panel = document.getElementById('admin-panel-content');
+  if (panel) {
+    if (isAdmin) {
+      panel.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <span class="admin-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Login sebagai Admin</span>
+        </div>
+        <button class="btn btn-danger btn-full" onclick="logoutAdmin()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout Admin
+        </button>`;
+    } else {
+      panel.innerHTML = `
+        <div style="font-size:13px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Login sebagai admin untuk tambah, edit, atau hapus member.</div>
+        <button class="btn btn-primary btn-full" onclick="openPinModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Login Admin
+        </button>`;
+    }
+  }
+
+  const addBtn = document.getElementById('btn-add-member');
+  const csvBtn = document.getElementById('btn-import-csv');
+  if (addBtn) addBtn.style.display = isAdmin ? '' : 'none';
+  if (csvBtn) csvBtn.style.display = isAdmin ? '' : 'none';
+}
+
+function logoutAdmin() {
+  setAdminSession(false);
+  refreshAdminUI();
+  showToast('Logout admin berhasil.');
+  document.getElementById('detail-overlay').classList.remove('open');
+  renderMembers();
+}
+
+function getNowWIB() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+}
+
+function getTodayWIB() {
+  const now = getNowWIB();
+  return { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() };
+}
+
+function parsetanggal_lahir(str) {
+  const [y,m,d] = str.split('-').map(Number);
+  return { year: y, month: m, day: d };
+}
+
+function getAge(tanggal_lahirStr) {
+  const { year, month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  const today = getTodayWIB();
+  let age = today.year - year;
+  if (today.month < month || (today.month === month && today.day < day)) age--;
+  return age;
+}
+
+function getCountdown(tanggal_lahirStr) {
+  const { month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  const today = getTodayWIB();
+  let nextBD = new Date(today.year, month - 1, day);
+  const todayDate = new Date(today.year, today.month - 1, today.day);
+  if (nextBD < todayDate) nextBD = new Date(today.year + 1, month - 1, day);
+  if (nextBD.getTime() === todayDate.getTime()) return 0;
+  const diff = Math.floor((nextBD - todayDate) / 86400000);
+  return diff;
+}
+
+function isBirthdayToday(tanggal_lahirStr) {
+  const { month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  const today = getTodayWIB();
+  return month === today.month && day === today.day;
+}
+
+function isBirthdayThisWeek(tanggal_lahirStr) {
+  const { month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  const today = getTodayWIB();
+  const todayDate = new Date(today.year, today.month - 1, today.day);
+  let bd = new Date(today.year, month - 1, day);
+  if (bd < todayDate) bd = new Date(today.year + 1, month - 1, day);
+  const diff = Math.floor((bd - todayDate) / 86400000);
+  return diff >= 0 && diff <= 7;
+}
+
+function isBirthdayThisMonth(tanggal_lahirStr) {
+  const { month } = parsetanggal_lahir(tanggal_lahirStr);
+  const today = getTodayWIB();
+  return month === today.month;
+}
+
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const DAYS_ID = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+function formatDate(tanggal_lahirStr) {
+  const { year, month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  return `${day} ${MONTHS_ID[month-1]} ${year}`;
+}
+
+function formatDateShort(tanggal_lahirStr) {
+  const { month, day } = parsetanggal_lahir(tanggal_lahirStr);
+  return `${day} ${MONTHS_ID[month-1]}`;
+}
+
+// ===== CLOCK =====
+function updateClock() {
+  const now = getNowWIB();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const clockEl = document.getElementById('clock');
+  if (clockEl) clockEl.textContent = `${h}:${m}:${s}`;
+  const dateEl = document.getElementById('date-display');
+  if (dateEl) {
+    const day = DAYS_ID[now.getDay()];
+    const d = now.getDate();
+    const mo = MONTHS_ID[now.getMonth()];
+    const y = now.getFullYear();
+    dateEl.textContent = `${day}, ${d} ${mo} ${y} — WIB`;
+  }
+}
+
+// ===== AVATAR COLORS =====
+const AV_COLORS = [
+  ['rgba(29,185,84,0.2)','#1db954'],
+  ['rgba(59,130,246,0.2)','#3b82f6'],
+  ['rgba(245,158,11,0.2)','#f59e0b'],
+  ['rgba(236,72,153,0.2)','#ec4899'],
+  ['rgba(168,85,247,0.2)','#a855f7'],
+  ['rgba(6,182,212,0.2)','#06b6d4'],
+  ['rgba(249,115,22,0.2)','#f97316'],
+];
+
+function getAvatarColor(nama) {
+  let hash = 0;
+  for (let c of nama) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  return AV_COLORS[Math.abs(hash) % AV_COLORS.length];
+}
+
+function getInitials(nama) {
+  return nama.trim().split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+// ===== NAVIGATION =====
+let currentPage = 'page-dashboard';
+
+function goPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.querySelector(`[data-page="${pageId}"]`)?.classList.add('active');
+  currentPage = pageId;
+  document.getElementById('app').scrollTop = 0;
+  if (pageId === 'page-dashboard') refreshDashboard();
+  if (pageId === 'page-settings') { loadSettings(); refreshAdminUI(); }
+  if (pageId === 'page-today') renderToday();
+  if (pageId === 'page-calendar') renderCalendar();
+  if (pageId === 'page-members') renderMembers();
+  if (pageId === 'page-week') renderWeek();
+  if (pageId === 'page-month') renderMonthPage();
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  t.classnama = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classnama = '', 2800);
+}
+
+// ===== CONFETTI =====
+function launchConfetti() {
+  const wrap = document.getElementById('confetti-wrap');
+  wrap.innerHTML = '';
+  const colors = ['#1db954','#f59e0b','#3b82f6','#ec4899','#ffffff','#a855f7'];
+  for (let i = 0; i < 50; i++) {
+    const el = document.createElement('div');
+    el.classnama = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}%;background:${colors[i%colors.length]};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.8}s;transform:rotate(${Math.random()*360}deg);`;
+    wrap.appendChild(el);
+  }
+  setTimeout(() => wrap.innerHTML = '', 4000);
+}
+
+// ===== MODAL =====
+function openModal(content) {
+  document.getElementById('modal-body').innerHTML = content;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// ===== DETAIL OVERLAY =====
+function openDetail(html) {
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail(e) {
+  if (!e || e.target === document.getElementById('detail-overlay')) {
+    document.getElementById('detail-overlay').classList.remove('open');
+  }
+}
+
+// ===== ADD / EDIT MEMBER =====
+let editingId = null;
+
+function openAddModal(member = null) {
+  const doOpen = () => {
+    editingId = member ? member.id : null;
+    const m = member || {};
+    openModal(`
+    <div class="modal-title">${member ? '✏️ Edit Member' : '✨ Tambah Member'}</div>
+    <div class="form-group">
+      <label class="form-label">Nama Lengkap *</label>
+      <input type="text" class="form-control" id="f-nama" placeholder="Nama lengkap" value="${m.nama || ''}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Lahir *</label>
+      <input type="date" class="form-control" id="f-tanggal_lahir" value="${m.tanggal_lahir || ''}">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="saveMember()">${member ? 'Simpan' : 'Tambah'}</button>
+    </div>
+  `);
+  };
+  requireAdmin(doOpen);
+}
+
+function saveMember() {
+  const nama = document.getElementById('f-nama').value.trim();
+  const tanggal_lahir = document.getElementById('f-tanggal_lahir').value;
+
+  if (!nama) { showToast('Nama wajib diisi!', 'error'); return; }
+  if (!tanggal_lahir) { showToast('Tanggal lahir wajib diisi!', 'error'); return; }
+
+  // Cek duplikat nama + tgl lahir
+  const dupe = DB.members.find(m => m.nama.toLowerCase() === nama.toLowerCase() && m.tanggal_lahir === tanggal_lahir && m.id !== editingId);
+  if (dupe) { showToast('Member dengan nama & tanggal lahir ini sudah ada!', 'error'); return; }
+
+  if (editingId) {
+    const idx = DB.members.findIndex(m => m.id === editingId);
+    if (idx >= 0) DB.members[idx] = { ...DB.members[idx], nama, tanggal_lahir };
+    showToast('Member berhasil diupdate! ✓');
+  } else {
+    DB.members.push({ id: Date.now().toString(), nama, tanggal_lahir, addedAt: new Date().toISOString() });
+    showToast('Member berhasil ditambahkan! 🎉');
+    if (isBirthdayToday(tanggal_lahir)) launchConfetti();
+  }
+
+  saveDB();
+  closeModal();
+  refreshDashboard();
+  if (currentPage === 'page-members') renderMembers();
+}
+
+// ===== DELETE MEMBER =====
+function deleteMember(id) {
+  requireAdmin(() => {
+    openModal(`
+      <div class="modal-title" style="color:var(--red);">🗑️ Hapus Member</div>
+      <p style="color:var(--text2);margin-bottom:20px;">Yakin mau hapus member ini? Tindakan ini tidak bisa dibatalkan.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Batal</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="confirmDelete('${id}')">Hapus</button>
+      </div>
+    `);
+  });
+}
+
+function confirmDelete(id) {
+  DB.members = DB.members.filter(m => m.id !== id);
+  saveDB();
+  closeModal();
+  closeDetail();
+  showToast('Member dihapus.');
+  refreshDashboard();
+  renderMembers();
+}
+
+// ===== SHOW MEMBER DETAIL =====
+function showMemberDetail(member) {
+  const [bg, color] = getAvatarColor(member.nama);
+  const countdown = getCountdown(member.tanggal_lahir);
+  const age = getAge(member.tanggal_lahir);
+  const progress = Math.round(((365 - countdown) / 365) * 100);
+  const isToday = isBirthdayToday(member.tanggal_lahir);
+
+  openDetail(`
+    <div style="text-align:center;padding:20px 0 16px;">
+      <div style="width:72px;height:72px;border-radius:50%;background:${bg};border:2px solid ${color}40;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:24px;color:${color};margin:0 auto 12px;">
+        ${getInitials(member.nama)}
+      </div>
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:800;">${member.nama}</div>
+      <div style="color:var(--text3);font-size:13px;margin-top:4px;">${formatDate(member.tanggal_lahir)}</div>
+      ${isToday ? `<div style="margin-top:10px;"><span class="member-badge badge-today">🎂 Ulang Tahun Hari Ini!</span></div>` : ''}
+    </div>
+    <div style="background:var(--glass);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--green);">${age}</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-family:var(--font-display);font-weight:600;">Tahun</div>
+        </div>
+        <div style="width:0.5px;background:var(--border);"></div>
+        <div style="text-align:center;flex:1;">
+          <div style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--amber);">${countdown}</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;font-family:var(--font-display);font-weight:600;">Hari Lagi</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Progress menuju ulang tahun berikutnya</div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${progress}%"></div></div>
+    </div>
+    <div style="background:var(--glass);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+      ${infoRow('📅 Tanggal Lahir', formatDate(member.tanggal_lahir))}
+      ${infoRow('📆 Ditambahkan', member.addedAt ? new Date(member.addedAt).toLocaleDateString('id-ID') : '—')}
+    </div>
+    <div style="display:flex;gap:10px;">
+      ${isAdmin
+        ? `<button class="btn btn-secondary" style="flex:1;" onclick="closeDetail();openAddModal(${JSON.stringify(member).replace(/"/g,'&quot;')})">✏️ Edit</button>
+           <button class="btn btn-danger btn-icon" onclick="deleteMember('${member.id}')">
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+           </button>`
+        : `<button class="btn btn-secondary btn-full" onclick="requireAdmin(()=>{closeDetail();openAddModal(${JSON.stringify(member).replace(/"/g,'&quot;')})})">🔐 Edit (Admin)</button>`
+      }
+    </div>
+  `);
+}
+
+function infoRow(label, val) {
+  return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;">
+    <span style="color:var(--text3);">${label}</span>
+    <span style="font-weight:500;text-align:right;max-width:60%;word-break:break-all;">${val}</span>
+  </div>`;
+}
+
+// ===== DASHBOARD =====
+let calMonth, calYear;
+
+function refreshDashboard() {
+  const today = DB.members.filter(m => isBirthdayToday(m.tanggal_lahir));
+  const week = DB.members.filter(m => isBirthdayThisWeek(m.tanggal_lahir));
+  const month = DB.members.filter(m => isBirthdayThisMonth(m.tanggal_lahir));
+
+  document.getElementById('stat-total').textContent = DB.members.length;
+  document.getElementById('stat-today').textContent = today.length;
+  document.getElementById('stat-week').textContent = week.length;
+  document.getElementById('stat-month').textContent = month.length;
+
+  // Notif banner
+  const banner = document.getElementById('notif-banner-area');
+  const upcoming3 = DB.members.filter(m => { const c = getCountdown(m.tanggal_lahir); return c > 0 && c <= 3; });
+  if (today.length > 0 || upcoming3.length > 0) {
+    let msgs = [];
+    if (today.length > 0) msgs.push(`🎂 ${today.map(m=>m.nama).join(', ')} ulang tahun hari ini!`);
+    if (upcoming3.length > 0) msgs.push(`⏰ ${upcoming3.map(m=>m.nama+' ('+getCountdown(m.tanggal_lahir)+' hari)').join(', ')}`);
+    banner.innerHTML = `<div class="notif-banner"><div class="notif-dot"></div><div style="font-size:13px;line-height:1.5;"><div style="font-family:var(--font-display);font-weight:600;margin-bottom:2px;">Notifikasi</div>${msgs.join('<br>')}</div></div>`;
+    document.getElementById('notif-dot').style.display = 'block';
+  } else {
+    banner.innerHTML = '';
+    document.getElementById('notif-dot').style.display = 'none';
+  }
+
+  // Upcoming list
+  const sorted = [...DB.members].sort((a,b) => getCountdown(a.tanggal_lahir) - getCountdown(b.tanggal_lahir)).slice(0,5);
+  const ul = document.getElementById('upcoming-list');
+  if (sorted.length === 0) {
+    ul.innerHTML = `<div class="empty-state"><div class="empty-icon">🫂</div><div class="empty-title">Belum Ada Member</div><div class="empty-sub">Tambah member untuk mulai tracking ulang tahun</div></div>`;
+    return;
+  }
+  ul.innerHTML = sorted.map(m => memberCardHTML(m)).join('');
+}
+
+function memberCardHTML(m, showCountdown = true) {
+  const [bg, color] = getAvatarColor(m.nama);
+  const countdown = getCountdown(m.tanggal_lahir);
+  const age = getAge(m.tanggal_lahir);
+  let badge = '';
+  if (countdown === 0) badge = `<span class="member-badge badge-today">🎂 Hari Ini!</span>`;
+  else if (countdown <= 3) badge = `<span class="member-badge badge-soon">${countdown} hari</span>`;
+  else if (showCountdown) badge = `<span class="member-badge badge-normal">${countdown} hari</span>`;
+
+  return `<div class="member-card" onclick='showMemberDetail(${JSON.stringify(m).replace(/'/g,"&#39;")})'>
+    <div class="avatar" style="background:${bg};color:${color};">${getInitials(m.nama)}</div>
+    <div class="member-info">
+      <div class="member-nama">${m.nama}</div>
+      <div class="member-meta">${formatDateShort(m.tanggal_lahir)} · ${age} tahun</div>
+    </div>
+    ${badge}
+  </div>`;
+}
+
+// ===== TODAY PAGE =====
+function renderToday() {
+  const today = getTodayWIB();
+  document.getElementById('today-sub').textContent = `${today.day} ${MONTHS_ID[today.month-1]} ${today.year}`;
+  const members = DB.members.filter(m => isBirthdayToday(m.tanggal_lahir));
+  const el = document.getElementById('today-list');
+  if (members.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🤷</div><div class="empty-title">Belum Ada Hari Ini</div><div class="empty-sub">Tidak ada member yang ulang tahun hari ini.</div></div>`;
+    return;
+  }
+  launchConfetti();
+  el.innerHTML = members.map(m => {
+    const age = getAge(m.tanggal_lahir);
+    return `<div class="today-card" onclick='showMemberDetail(${JSON.stringify(m).replace(/'/g,"&#39;")})'>
+      <div class="age-badge">${age+1}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-display);font-size:16px;font-weight:700;">${m.nama}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${formatDate(m.tanggal_lahir)} · Ulang tahun ke-${age+1}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+
+
+// ===== WEEK PAGE =====
+function renderWeek() {
+  const members = DB.members.filter(m => isBirthdayThisWeek(m.tanggal_lahir)).sort((a,b) => getCountdown(a.tanggal_lahir) - getCountdown(b.tanggal_lahir));
+  const today = getTodayWIB();
+  const nextSun = new Date(today.year, today.month-1, today.day + 7);
+  document.getElementById('week-sub').textContent = `7 hari ke depan`;
+  const el = document.getElementById('week-list');
+  if (members.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Kosong Minggu Ini</div><div class="empty-sub">Tidak ada ulang tahun dalam 7 hari ke depan.</div></div>`;
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const countdown = getCountdown(m.tanggal_lahir);
+    const { day, month } = parsetanggal_lahir(m.tanggal_lahir);
+    const [bg, color] = getAvatarColor(m.nama);
+    return `<div class="week-card" onclick='showMemberDetail(${JSON.stringify(m).replace(/'/g,"&#39;")})'>
+      <div class="date-block" style="border-color:${color}30;background:${bg};">
+        <div class="d-num" style="color:${color};">${day}</div>
+        <div class="d-mon">${MONTHS_ID[month-1].substring(0,3)}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--font-display);font-size:14px;font-weight:600;">${m.nama}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${getAge(m.tanggal_lahir)} tahun</div>
+        <div class="countdown-wrap" style="margin-top:6px;">
+          <div class="countdown-bar"><div class="countdown-fill" style="width:${Math.max(0,100-countdown/7*100)}%;background:${color};"></div></div>
+          <span style="font-size:11px;font-family:var(--font-display);font-weight:600;color:${countdown===0?'var(--green)':color};">${countdown === 0 ? 'Hari Ini! 🎂' : countdown + ' hari'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== MONTH PAGE =====
+function renderMonthPage() {
+  const today = getTodayWIB();
+  document.getElementById('month-sub').textContent = `${MONTHS_ID[today.month-1]} ${today.year}`;
+  const members = DB.members.filter(m => isBirthdayThisMonth(m.tanggal_lahir)).sort((a,b) => parsetanggal_lahir(a.tanggal_lahir).day - parsetanggal_lahir(b.tanggal_lahir).day);
+  const el = document.getElementById('month-list');
+  if (members.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🗓️</div><div class="empty-title">Kosong Bulan Ini</div><div class="empty-sub">Tidak ada ulang tahun bulan ini.</div></div>`;
+    return;
+  }
+  el.innerHTML = members.map(m => memberCardHTML(m, true)).join('');
+}
+
+// ===== MEMBERS PAGE =====
+let memberPage = 0;
+const PAGE_SIZE = 10;
+
+function renderMembers() {
+  const query = document.getElementById('member-search')?.value.toLowerCase() || '';
+  const sort = document.getElementById('sort-select')?.value || 'nama';
+
+  const filterEl = document.getElementById('division-filters');
+  if (filterEl) filterEl.innerHTML = '';
+
+  let filtered = DB.members.filter(m => !query || m.nama.toLowerCase().includes(query));
+
+  if (sort === 'nama') filtered.sort((a,b) => a.nama.localeCompare(b.nama));
+  else if (sort === 'tanggal_lahir') filtered.sort((a,b) => a.tanggal_lahir.localeCompare(b.tanggal_lahir));
+  else filtered.sort((a,b) => getCountdown(a.tanggal_lahir) - getCountdown(b.tanggal_lahir));
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (memberPage >= totalPages) memberPage = Math.max(0, totalPages - 1);
+  const slice = filtered.slice(memberPage * PAGE_SIZE, (memberPage + 1) * PAGE_SIZE);
+
+  const el = document.getElementById('member-list');
+  if (!el) return;
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Tidak Ditemukan</div><div class="empty-sub">Coba kata kunci lain.</div></div>`;
+  } else {
+    el.innerHTML = slice.map(m => memberCardHTML(m)).join('');
+  }
+
+  // Pagination
+  const pg = document.getElementById('members-pagination');
+  if (pg && totalPages > 1) {
+    let html = `<div class="pagination">`;
+    for (let i = 0; i < totalPages; i++) {
+      html += `<div class="page-btn ${i === memberPage ? 'active' : ''}" onclick="setMPage(${i})">${i+1}</div>`;
+    }
+    html += `</div>`;
+    pg.innerHTML = html;
+  } else if (pg) pg.innerHTML = '';
+}
+
+function setMPage(p) { memberPage = p; renderMembers(); document.getElementById('app').scrollTop = 0; }
+
+// ===== CALENDAR =====
+function renderCalendar() {
+  const today = getTodayWIB();
+  if (!calMonth) { calMonth = today.month; calYear = today.year; }
+  
+  document.getElementById('cal-month-label').textContent = `${MONTHS_ID[calMonth-1]} ${calYear}`;
+  
+  const bdMap = {};
+  DB.members.forEach(m => {
+    const { month, day } = parsetanggal_lahir(m.tanggal_lahir);
+    if (month === calMonth) {
+      if (!bdMap[day]) bdMap[day] = [];
+      bdMap[day].push(m);
+    }
+  });
+
+  const firstDay = new Date(calYear, calMonth-1, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+  const daynamas = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+  let html = daynamas.map(d => `<div class="cal-day-nama">${d}</div>`).join('');
+  
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-cell empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.day && calMonth === today.month && calYear === today.year;
+    const hasBD = bdMap[d];
+    html += `<div class="cal-cell ${isToday ? 'today' : ''} ${hasBD ? 'has-bd' : ''}" onclick="showCalDay(${d})">
+      <span>${d}</span>
+      ${hasBD ? `<span class="cal-badge-num">×${hasBD.length}</span>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+  document.getElementById('cal-detail').innerHTML = '';
+}
+
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 12) { calMonth = 1; calYear++; }
+  if (calMonth < 1) { calMonth = 12; calYear--; }
+  renderCalendar();
+}
+
+function showCalDay(day) {
+  const members = DB.members.filter(m => {
+    const { month, day: d } = parsetanggal_lahir(m.tanggal_lahir);
+    return month === calMonth && d === day;
+  });
+  const el = document.getElementById('cal-detail');
+  if (members.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="section-title">${day} ${MONTHS_ID[calMonth-1]} — ${members.length} ulang tahun</div>${members.map(m => memberCardHTML(m, false)).join('')}`;
+}
+
+function searchByDate() {
+  const val = document.getElementById('search-date-input').value;
+  if (!val) return;
+  const [y,mo,d] = val.split('-').map(Number);
+  const members = DB.members.filter(m => {
+    const { month, day } = parsetanggal_lahir(m.tanggal_lahir);
+    return month === mo && day === d;
+  });
+  const el = document.getElementById('search-date-result');
+  if (members.length === 0) {
+    el.innerHTML = `<div class="empty-state" style="padding:30px 20px;"><div class="empty-icon">🔍</div><div class="empty-title">Tidak Ada</div><div class="empty-sub">Tidak ada member yang ulang tahun pada tanggal ini.</div></div>`;
+  } else {
+    el.innerHTML = `<div class="section-title">${members.length} member ditemukan</div>${members.map(m => memberCardHTML(m, false)).join('')}`;
+  }
+}
+
+// ===== CSV IMPORT =====
+function parsetanggal_lahirFromCSV(str) {
+  str = str.trim();
+  // Format dd-mm-yyyy atau dd/mm/yyyy
+  let m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  // Format yyyy-mm-dd
+  m = str.match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})$/);
+  if (m) return str.replace(/\//g,'-');
+  return null;
+}
+
+function handleCSVUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => processCSV(e.target.result);
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function processCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('CSV kosong!', 'error'); return; }
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g,'').replace(/_/g,''));
+  const namaIdx = headers.findIndex(h => h === 'nama' || h === 'nama');
+  const tanggal_lahirIdx = headers.findIndex(h => h.includes('tanggal') || h.includes('lahir') || h === 'tanggal_lahir' || h === 'tgllahir' || h === 'tgl');
+
+  if (namaIdx < 0) { showToast('Kolom "nama" tidak ditemukan!', 'error'); return; }
+  if (tanggal_lahirIdx < 0) { showToast('Kolom "tanggal_lahir" tidak ditemukan!', 'error'); return; }
+
+  const rows = lines.slice(1).map(l => l.split(',').map(c => c.trim().replace(/"/g,'')));
+  let newCount = 0, dupCount = 0, failCount = 0;
+  const preview = [];
+
+  rows.forEach(row => {
+    if (row.length <= Math.max(namaIdx, tanggal_lahirIdx)) { failCount++; return; }
+    const nama = row[namaIdx] || '';
+    const rawtanggal_lahir = row[tanggal_lahirIdx] || '';
+    const tanggal_lahir = parsetanggal_lahirFromCSV(rawtanggal_lahir);
+    if (!nama || !tanggal_lahir) { failCount++; return; }
+    const isDupe = DB.members.some(m => m.nama.toLowerCase() === nama.toLowerCase() && m.tanggal_lahir === tanggal_lahir);
+    preview.push({ nama, tanggal_lahir, isDupe });
+    if (isDupe) dupCount++; else newCount++;
+  });
+
+  openModal(`
+    <div class="modal-title">📊 Preview Import</div>
+    <div class="import-result" style="margin-bottom:14px;">
+      <div class="import-row"><span>Total ditemukan</span><span style="font-weight:600;">${rows.length} data</span></div>
+      <div class="import-row"><span>✅ Data baru</span><span style="font-weight:600;color:var(--green);">${newCount}</span></div>
+      <div class="import-row"><span>⚠️ Duplikat</span><span style="font-weight:600;color:var(--amber);">${dupCount}</span></div>
+      <div class="import-row"><span>❌ Gagal diproses</span><span style="font-weight:600;color:var(--red);">${failCount}</span></div>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">Aksi untuk duplikat:</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-secondary btn-sm" onclick="doImport('skip', ${JSON.stringify(preview).replace(/"/g,'&quot;')})">⏭️ Skip Duplikat</button>
+      <button class="btn btn-secondary btn-sm" onclick="doImport('replace', ${JSON.stringify(preview).replace(/"/g,'&quot;')})">🔄 Replace Data Lama</button>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="doImport('skip', ${JSON.stringify(preview).replace(/"/g,'&quot;')})">Import Sekarang</button>
+    </div>
+  `);
+}
+
+function doImport(mode, preview) {
+  let imported = 0;
+  preview.forEach(row => {
+    if (row.isDupe) {
+      if (mode === 'skip') return;
+      if (mode === 'replace') {
+        const idx = DB.members.findIndex(m => m.nama.toLowerCase() === row.nama.toLowerCase() && m.tanggal_lahir === row.tanggal_lahir);
+        if (idx >= 0) { DB.members[idx] = { ...DB.members[idx], nama: row.nama, tanggal_lahir: row.tanggal_lahir }; imported++; }
+        return;
+      }
+    }
+    if (!row.isDupe) {
+      DB.members.push({ id: Date.now().toString() + Math.random(), nama: row.nama, tanggal_lahir: row.tanggal_lahir, addedAt: new Date().toISOString() });
+      imported++;
+    }
+  });
+  saveDB();
+  closeModal();
+  refreshDashboard();
+  if (currentPage === 'page-members') renderMembers();
+  showToast(`${imported} member berhasil diimport! 🎉`);
+}
+
+// ===== EXPORT =====
+function exportCSV() {
+  const rows = [['nama','tanggal_lahir']];
+  DB.members.forEach(m => {
+    const { day, month, year } = parsetanggal_lahir(m.tanggal_lahir);
+    const tanggal_lahirFormatted = `${String(day).padStart(2,'0')}-${String(month).padStart(2,'0')}-${year}`;
+    rows.push([m.nama, tanggal_lahirFormatted]);
+  });
+  const csv = rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `birthdaybot_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('CSV berhasil diexport! 📥');
+}
+
+function backupData() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `birthdaybot_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('Backup berhasil! 💾');
+}
+
+function restoreData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  requireAdmin(() => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.members) throw new Error('Format tidak valid');
+        DB = data;
+        saveDB();
+        refreshDashboard();
+        showToast(`Restore berhasil! ${DB.members.length} member dimuat. ✓`);
+      } catch(err) { showToast('File backup tidak valid!', 'error'); }
+    };
+    reader.readAsText(file);
+  });
+  event.target.value = '';
+}
+
+function confirmClearAll() {
+  requireAdmin(() => {
+    openModal(`
+      <div class="modal-title" style="color:var(--red);">⚠️ Hapus Semua Data</div>
+      <p style="color:var(--text2);margin-bottom:20px;">Ini akan menghapus SEMUA data member. Tindakan ini tidak bisa dibatalkan!</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Batal</button>
+        <button class="btn btn-danger" style="flex:1;" onclick="clearAll()">Hapus Semua</button>
+      </div>
+    `);
+  });
+}
+
+function clearAll() {
+  DB.members = [];
+  saveDB();
+  closeModal();
+  refreshDashboard();
+  showToast('Semua data dihapus.', 'error');
+}
+
+// ===== SETTINGS =====
+function saveSettings() {
+  const nama = document.getElementById('org-nama')?.value.trim();
+  if (nama) DB.settings.orgnama = nama;
+  saveDB();
+  showToast('Pengaturan disimpan! ✓');
+}
+
+function loadSettings() {
+  const el = document.getElementById('org-nama');
+  if (el) el.value = DB.settings.orgnama || '';
+}
+
+// ===== NOTIF PANEL =====
+function showNotifPanel() {
+  const today = DB.members.filter(m => isBirthdayToday(m.tanggal_lahir));
+  const soon = DB.members.filter(m => { const c = getCountdown(m.tanggal_lahir); return c > 0 && c <= 3; });
+  let html = `<div class="modal-title">🔔 Notifikasi</div>`;
+  if (today.length === 0 && soon.length === 0) {
+    html += `<div class="empty-state" style="padding:30px 0;"><div class="empty-icon">😌</div><div class="empty-title">Tidak Ada Notifikasi</div></div>`;
+  }
+  if (today.length > 0) {
+    html += `<div class="section-title">Hari Ini</div>${today.map(m => memberCardHTML(m, false)).join('')}`;
+  }
+  if (soon.length > 0) {
+    html += `<div class="section-title" style="margin-top:12px;">Segera (1-3 hari)</div>${soon.map(m => memberCardHTML(m, true)).join('')}`;
+  }
+  openModal(html);
+}
+
+// ===== SAMPLE DATA =====
+function addSampleData() {
+  if (DB.members.length > 0) return;
+  const today = getTodayWIB();
+  const y = today.year;
+  const mo = String(today.month).padStart(2,'0');
+  const d = String(today.day).padStart(2,'0');
+  const d2 = String(Math.min(today.day+2, 28)).padStart(2,'0');
+  const d5 = String(Math.min(today.day+5, 28)).padStart(2,'0');
+  DB.members = [
+    { id:'1', nama:'Jeremi Damanik',     tanggal_lahir:`${y}-${mo}-${d}`,  addedAt: new Date().toISOString() },
+    { id:'2', nama:'Sarah Situmorang',   tanggal_lahir:`${y-22}-03-15`,    addedAt: new Date().toISOString() },
+    { id:'3', nama:'Benny Simbolon',     tanggal_lahir:`${y-25}-${mo}-${d2}`, addedAt: new Date().toISOString() },
+    { id:'4', nama:'Maria Hutabarat',    tanggal_lahir:`${y-20}-${mo}-${d5}`, addedAt: new Date().toISOString() },
+    { id:'5', nama:'Ronald Simatupang', tanggal_lahir:`${y-30}-08-20`,     addedAt: new Date().toISOString() },
+    { id:'6', nama:'Yunita Pangaribuan',tanggal_lahir:`${y-24}-${mo}-10`,  addedAt: new Date().toISOString() },
+  ];
+  saveDB();
+}
+
+// ===== INIT =====
+function init() {
+  loadDB();
+  checkSession();
+  if (DB.members.length === 0) addSampleData();
+  loadSettings();
+  refreshDashboard();
+  refreshAdminUI();
+  updateClock();
+  setInterval(updateClock, 1000);
+}
+
+init();
+</script>
+</body>
+</html>
